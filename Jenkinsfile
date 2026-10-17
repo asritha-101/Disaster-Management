@@ -10,23 +10,32 @@ pipeline {
     timestamps()
     timeout(time: 30, unit: 'MINUTES')
     disableConcurrentBuilds()
+    skipDefaultCheckout(true)
   }
 
   environment {
     // Keep Corepack's cache inside the Jenkins workspace on Windows agents.
     COREPACK_HOME = "${WORKSPACE}\\.corepack"
+    // Use the system npm installed with Node.js on this Windows Jenkins host.
+    NPM_CMD = 'C:\\Program Files\\nodejs\\npm.cmd'
   }
 
   stages {
+    stage('Clean workspace and checkout') {
+      steps {
+        // Remove node_modules left by older pnpm builds before npm installs.
+        deleteDir()
+        checkout scm
+      }
+    }
+
     stage('Install dependencies') {
       steps {
         script {
           if (isUnix()) {
             sh 'corepack pnpm install --frozen-lockfile'
           } else {
-            // pnpm 11 requires a project symlink on Windows; restricted Jenkins
-            // processes may not have permission to create it. npm avoids that link.
-            bat 'npm install --no-package-lock'
+            bat 'call "%NPM_CMD%" install --no-package-lock --no-audit --no-fund'
           }
         }
       }
@@ -38,7 +47,7 @@ pipeline {
           if (isUnix()) {
             sh 'corepack pnpm lint'
           } else {
-            bat 'npm run lint'
+            bat 'call "%NPM_CMD%" run lint'
           }
         }
       }
@@ -50,7 +59,7 @@ pipeline {
           if (isUnix()) {
             sh 'corepack pnpm typecheck'
           } else {
-            bat 'npm run typecheck'
+            bat 'call "%NPM_CMD%" run typecheck'
           }
         }
       }
@@ -62,7 +71,7 @@ pipeline {
           if (isUnix()) {
             sh 'corepack pnpm test'
           } else {
-            bat 'npm run test'
+            bat 'call "%NPM_CMD%" run test'
           }
         }
       }
