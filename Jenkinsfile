@@ -13,7 +13,7 @@ pipeline {
   }
 
   environment {
-    // Keep Corepack's pnpm cache inside the Jenkins workspace on Windows agents.
+    // Keep Corepack's cache inside the Jenkins workspace on Windows agents.
     COREPACK_HOME = "${WORKSPACE}\\.corepack"
   }
 
@@ -24,7 +24,9 @@ pipeline {
           if (isUnix()) {
             sh 'corepack pnpm install --frozen-lockfile'
           } else {
-            bat 'corepack pnpm install --frozen-lockfile'
+            // pnpm 11 requires a project symlink on Windows; restricted Jenkins
+            // processes may not have permission to create it. npm avoids that link.
+            bat 'npm install --no-package-lock'
           }
         }
       }
@@ -36,7 +38,7 @@ pipeline {
           if (isUnix()) {
             sh 'corepack pnpm lint'
           } else {
-            bat 'corepack pnpm lint'
+            bat 'npm run lint'
           }
         }
       }
@@ -48,7 +50,7 @@ pipeline {
           if (isUnix()) {
             sh 'corepack pnpm typecheck'
           } else {
-            bat 'corepack pnpm typecheck'
+            bat 'npm run typecheck'
           }
         }
       }
@@ -60,7 +62,7 @@ pipeline {
           if (isUnix()) {
             sh 'corepack pnpm test'
           } else {
-            bat 'corepack pnpm test'
+            bat 'npm run test'
           }
         }
       }
