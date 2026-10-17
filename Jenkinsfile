@@ -12,6 +12,11 @@ pipeline {
     disableConcurrentBuilds()
   }
 
+  environment {
+    // Keep Corepack's pnpm cache inside the Jenkins workspace on Windows agents.
+    COREPACK_HOME = "${WORKSPACE}\\.corepack"
+  }
+
   stages {
     stage('Install dependencies') {
       steps {

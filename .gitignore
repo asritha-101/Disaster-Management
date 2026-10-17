@@ -5,6 +5,7 @@ playwright-report
 test-results
 .turbo
 .pnpm-store
+work/jenkins-evidence/
 .env
 .env.local
 .env.development.local
